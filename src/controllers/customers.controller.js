@@ -22,6 +22,8 @@ const getCustomers = catchAsync(async (req, res) => {
     endDate,
     sortBy,
     sortOrder,
+    limit,
+    lastId,
   } = req.query;
 
   const filters = {
@@ -34,6 +36,8 @@ const getCustomers = catchAsync(async (req, res) => {
     endDate,
     sortBy,
     sortOrder,
+    limit: parseInt(limit) || 50,
+    lastId,
   };
 
   // Remove undefined values
@@ -50,6 +54,8 @@ const getCustomers = catchAsync(async (req, res) => {
     message: CUSTOMERS_CONSTANTS.SUCCESS.CUSTOMERS_FETCHED,
     data: result.data,
     total: result.total,
+    hasMore: result.hasMore,
+    lastId: result.lastId,
     filters,
   });
 });

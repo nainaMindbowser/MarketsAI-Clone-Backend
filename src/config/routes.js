@@ -1,19 +1,17 @@
 const authRoutes = require("../routes/auth.routes");
 const customerRoutes = require("../routes/customers.routes");
-const MESSAGES = require("../constants/messages");
+const templateRoutes = require("../routes/template.routes");
+const senderEmailRoutes = require("../routes/senderEmail.routes");
+const emailRoutes = require("../routes/email.routes");
+const emailHistoryRoutes = require("../routes/emailHistory.routes");
 
-const setupRoutes = (app) => {
-  // API routes
+const configureRoutes = (app) => {
   app.use("/api/auth", authRoutes);
   app.use("/api/customers", customerRoutes);
-
-  // 404 handler for unmatched routes
-  app.use("*", (req, res) => {
-    res.status(404).json({
-      status: "error",
-      message: `${MESSAGES.API.NOT_FOUND}: ${req.originalUrl}`,
-    });
-  });
+  app.use("/api/templates", templateRoutes);
+  app.use("/api/sender-email", senderEmailRoutes);
+  app.use("/api/email", emailRoutes);
+  app.use("/api/email-history", emailHistoryRoutes);
 };
 
-module.exports = setupRoutes;
+module.exports = configureRoutes;

@@ -3,34 +3,35 @@ const DatabaseUtils = require("../utils/database");
 const { CUSTOMERS_CONSTANTS } = require("../constants/customers.constants");
 
 class CustomersService {
-  /**
-   * Get all customers with optional filters and sorting
-   * @param {Object} filters - Filter parameters
-   * @returns {Promise<Object>} - Customers data
-   */
   async getCustomers(filters = {}) {
     try {
       if (!filters || typeof filters !== "object") {
         filters = {};
       }
 
-      // Build MongoDB query
       const query = DatabaseUtils.buildQuery(filters);
-
-      // Build projection for column selection
       const projection = DatabaseUtils.buildProjection(filters.columns);
-
-      // Build sort options
       const sort = DatabaseUtils.buildSort(filters.sortBy, filters.sortOrder);
+
+      const limit = parseInt(filters.limit) || 50;
+      const lastId = filters.lastId;
+
+      if (lastId) {
+        query._id = { $lt: lastId };
+      }
 
       const customers = await Customer.find(query, projection)
         .sort(sort)
+        .limit(limit)
         .lean();
 
       return {
         success: true,
         data: customers,
         total: customers.length,
+        hasMore: customers.length === limit,
+        lastId:
+          customers.length > 0 ? customers[customers.length - 1]._id : null,
       };
     } catch (error) {
       console.error("CustomersService.getCustomers error:", error);
