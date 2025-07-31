@@ -172,15 +172,19 @@ class TemplateService {
 
   static async getTemplateById(templateId, userId) {
     try {
-      const template = await Template.findById(templateId)
-        .where({
-          isDeleted: false,
-          createdBy: userId,
-        })
-        .populate([
-          { path: "createdBy", select: "name email" },
-          { path: "updatedBy", select: "name email" },
-        ]);
+      let query = {
+        _id: templateId,
+        isDeleted: false,
+      };
+
+      if (userId) {
+        query.createdBy = userId;
+      }
+
+      const template = await Template.findOne(query).populate([
+        { path: "createdBy", select: "name email" },
+        { path: "updatedBy", select: "name email" },
+      ]);
 
       if (!template) {
         const error = new Error(TEMPLATE_CONSTANTS.ERRORS.NOT_FOUND);

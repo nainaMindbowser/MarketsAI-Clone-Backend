@@ -100,12 +100,12 @@ const updateTemplate = async (req, res) => {
 const getTemplateById = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.role === "admin" ? null : req.user.userId;
     const result = await TemplateService.getTemplateById(id, userId);
 
     return res
-      .status(200)
-      .json(SuccessResponse.success(result.data, result.message));
+      .status(HTTP_STATUS.OK)
+      .json(ErrorResponse.success(result.message, result.data));
   } catch (error) {
     return handleTemplateError(error, res);
   }
