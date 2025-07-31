@@ -25,7 +25,7 @@ const getCustomers = catchAsync(async (req, res) => {
   } = req.query;
 
   const filters = {
-    columns: columns ? columns.split(",") : undefined,
+    columns: columns,
     subscriptionType:
       ValidationUtils.normalizeSubscriptionType(subscriptionType),
     deviceType: ValidationUtils.normalizeDeviceType(deviceType),
@@ -36,6 +36,7 @@ const getCustomers = catchAsync(async (req, res) => {
     sortOrder,
   };
 
+  // Remove undefined values
   Object.keys(filters).forEach((key) => {
     if (filters[key] === undefined) {
       delete filters[key];

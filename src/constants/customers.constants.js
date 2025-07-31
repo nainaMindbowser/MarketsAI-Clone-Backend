@@ -1,3 +1,15 @@
+const SUBSCRIPTION_TYPES = {
+  BASIC: "basic",
+  PROFESSIONAL: "professional",
+  FREE_PRO: "free-pro",
+};
+
+const DEVICE_TYPES = {
+  WEB: "WEB",
+  IOS: "IOS",
+  ANDROID: "ANDROID",
+};
+
 const CUSTOMERS_CONSTANTS = {
   ERRORS: {
     FETCH_CUSTOMERS: "Error fetching customers",
@@ -9,5 +21,7 @@ const CUSTOMERS_CONSTANTS = {
 };
 
 module.exports = {
+  SUBSCRIPTION_TYPES,
+  DEVICE_TYPES,
   CUSTOMERS_CONSTANTS,
 };

@@ -10,8 +10,17 @@ class CustomersService {
    */
   async getCustomers(filters = {}) {
     try {
+      if (!filters || typeof filters !== "object") {
+        filters = {};
+      }
+
+      // Build MongoDB query
       const query = DatabaseUtils.buildQuery(filters);
+
+      // Build projection for column selection
       const projection = DatabaseUtils.buildProjection(filters.columns);
+
+      // Build sort options
       const sort = DatabaseUtils.buildSort(filters.sortBy, filters.sortOrder);
 
       const customers = await Customer.find(query, projection)
@@ -24,6 +33,7 @@ class CustomersService {
         total: customers.length,
       };
     } catch (error) {
+      console.error("CustomersService.getCustomers error:", error);
       throw new Error(
         `${CUSTOMERS_CONSTANTS.ERRORS.FETCH_CUSTOMERS} ${error.message}`
       );
