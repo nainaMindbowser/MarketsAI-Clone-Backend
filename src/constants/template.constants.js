@@ -25,7 +25,7 @@ const TEMPLATE_CONSTANTS = {
     SUBJECT_MAX_LENGTH: 200,
     CONTENT_MIN_LENGTH: 10,
     CONTENT_MAX_LENGTH: 50000,
-    NAME_REGEX: /^[a-zA-Z0-9\s_-]+$/,
+    NAME_REGEX: /^[a-zA-Z0-9\s_\-.,!?'"()&]+$/,
   },
 };
 

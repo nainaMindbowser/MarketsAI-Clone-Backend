@@ -46,12 +46,16 @@ class DatabaseUtils {
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           if (!isNaN(startDate.getTime())) {
+            // Set to beginning of the day (00:00:00.000)
+            startDate.setHours(0, 0, 0, 0);
             query.createdAt.$gte = startDate;
           }
         }
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
           if (!isNaN(endDate.getTime())) {
+            // Set to end of the day (23:59:59.999)
+            endDate.setHours(23, 59, 59, 999);
             query.createdAt.$lte = endDate;
           }
         }

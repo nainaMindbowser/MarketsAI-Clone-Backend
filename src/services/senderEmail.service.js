@@ -20,19 +20,11 @@ class SenderEmailService {
 
       const { email } = validation.validatedData;
 
-      // Check if email already exists (including soft deleted)
-      const existingEmail = await SenderEmail.findOne({ email }).select(
-        "+isDeleted"
-      );
+      // Check if email already exists
+      const existingEmail = await SenderEmail.findOne({ email });
+
       if (existingEmail) {
-        if (existingEmail.isDeleted) {
-          // Email was previously deleted, don't allow re-creation
-          throw new Error(
-            "This email address was previously used and cannot be re-added"
-          );
-        } else {
-          throw new Error(SENDER_EMAIL_CONSTANTS.ERRORS.EMAIL_ALREADY_EXISTS);
-        }
+        throw new Error(SENDER_EMAIL_CONSTANTS.ERRORS.EMAIL_ALREADY_EXISTS);
       }
 
       // Create new sender email
@@ -59,25 +51,12 @@ class SenderEmailService {
    */
   static async getSenderEmails(options = {}) {
     try {
-      const {
-        includeDeleted = false,
-        sortBy = "createdAt",
-        sortOrder = "desc",
-      } = options;
-
-      let query = {};
-      if (includeDeleted) {
-        // Include both active and deleted
-        query = {};
-      } else {
-        // Only active emails (default middleware will handle this)
-        query = { isActive: true };
-      }
+      const { sortBy = "createdAt", sortOrder = "desc" } = options;
 
       const sortOptions = {};
       sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
 
-      const senderEmails = await SenderEmail.find(query)
+      const senderEmails = await SenderEmail.find({ isActive: true })
         .sort(sortOptions)
         .lean();
 
@@ -94,7 +73,7 @@ class SenderEmailService {
   }
 
   /**
-   * Soft delete sender email
+   * Delete sender email
    * @param {string} id - Email ID
    * @returns {Promise<Object>} - Deletion result
    */
@@ -110,11 +89,7 @@ class SenderEmailService {
         throw new Error(SENDER_EMAIL_CONSTANTS.ERRORS.EMAIL_NOT_FOUND);
       }
 
-      if (senderEmail.isDeleted) {
-        throw new Error("Email is already deleted");
-      }
-
-      await senderEmail.softDelete();
+      await SenderEmail.findByIdAndDelete(validation.id);
 
       return {
         success: true,

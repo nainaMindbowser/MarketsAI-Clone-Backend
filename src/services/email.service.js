@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 const Customer = require("../models/Customer");
 const TemplateService = require("./template.service");
 const EmailHistoryService = require("./emailHistory.service");
+require("dotenv");
 
 class EmailService {
   constructor() {
@@ -23,7 +24,7 @@ class EmailService {
 
     try {
       const mailOptions = {
-        from: "naina.premani@mindbowser.com",
+        from: process.env.EMAIL,
         to: to,
         subject: subject,
         html: content,
@@ -88,33 +89,68 @@ class EmailService {
     subject,
     content,
     userId = null,
-    additionalData = {}
+    additionalData = {},
+    concurrencyLimit = 10
   ) {
     try {
       const results = [];
       const errors = [];
       const historyRecords = [];
 
-      for (const email of emails) {
-        try {
-          const result = await this.sendEmail(
-            email,
-            subject,
-            content,
-            userId,
-            additionalData
-          );
-          results.push({
-            email,
-            success: true,
-            messageId: result.messageId,
-            processingTime: result.processingTime,
-          });
-          if (result.historyRecord) {
-            historyRecords.push(result.historyRecord);
+      // Process emails in batches for parallel sending
+      const processBatch = async (batch) => {
+        const batchPromises = batch.map(async (email) => {
+          try {
+            const result = await this.sendEmail(
+              email,
+              subject,
+              content,
+              userId,
+              additionalData
+            );
+            return {
+              email,
+              success: true,
+              messageId: result.messageId,
+              processingTime: result.processingTime,
+              historyRecord: result.historyRecord,
+            };
+          } catch (error) {
+            return {
+              email,
+              success: false,
+              error: error.message,
+            };
           }
-        } catch (error) {
-          errors.push({ email, error: error.message });
+        });
+
+        return await Promise.all(batchPromises);
+      };
+
+      // Split emails into batches based on concurrency limit
+      const batches = [];
+      for (let i = 0; i < emails.length; i += concurrencyLimit) {
+        batches.push(emails.slice(i, i + concurrencyLimit));
+      }
+
+      // Process batches sequentially but emails within each batch in parallel
+      for (const batch of batches) {
+        const batchResults = await processBatch(batch);
+
+        for (const result of batchResults) {
+          if (result.success) {
+            results.push({
+              email: result.email,
+              success: true,
+              messageId: result.messageId,
+              processingTime: result.processingTime,
+            });
+            if (result.historyRecord) {
+              historyRecords.push(result.historyRecord);
+            }
+          } else {
+            errors.push({ email: result.email, error: result.error });
+          }
         }
       }
 
@@ -215,12 +251,16 @@ class EmailService {
         subscriptionType: subscriptionType,
       };
 
+      // Use higher concurrency for customer-type emails
+      const concurrencyLimit = emailType === "customer-type" ? 15 : 10;
+
       const result = await this.sendBulkEmails(
         emails,
         emailSubject,
         emailContent,
         userId,
-        additionalData
+        additionalData,
+        concurrencyLimit
       );
 
       return {

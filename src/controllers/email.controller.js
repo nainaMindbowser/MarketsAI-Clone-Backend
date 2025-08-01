@@ -32,7 +32,7 @@ const sendTemplateEmail = async (req, res) => {
     }
 
     const emailService = new EmailService();
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const result = await emailService.sendTemplateEmail(
       templateId,
@@ -52,6 +52,31 @@ const sendTemplateEmail = async (req, res) => {
         results: result.results,
         errors: result.errors,
         historyRecords: result.historyRecords,
+        performance: {
+          averageProcessingTime:
+            result.results.length > 0
+              ? Math.round(
+                  result.results.reduce((sum, r) => sum + r.processingTime, 0) /
+                    result.results.length
+                )
+              : 0,
+          totalProcessingTime: result.results.reduce(
+            (sum, r) => sum + r.processingTime,
+            0
+          ),
+          emailsPerSecond:
+            result.results.length > 0
+              ? Math.round(
+                  (result.results.length /
+                    (result.results.reduce(
+                      (sum, r) => sum + r.processingTime,
+                      0
+                    ) /
+                      1000)) *
+                    100
+                ) / 100
+              : 0,
+        },
       })
     );
   } catch (error) {
