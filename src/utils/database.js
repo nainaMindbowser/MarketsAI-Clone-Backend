@@ -1,7 +1,4 @@
 class DatabaseUtils {
-  /**
-   * Column mapping from frontend names to database field names
-   */
   static COLUMN_MAPPING = {
     Email: "email",
     Name: "name",
@@ -20,16 +17,10 @@ class DatabaseUtils {
     "Renewal Date": "renewalDate",
   };
 
-  /**
-   * Build MongoDB filter query from request filters
-   * @param {Object} filters - Filter parameters
-   * @returns {Object} - MongoDB query object
-   */
   static buildQuery(filters = {}) {
     try {
       const query = {};
 
-      // Ensure filters is an object
       if (!filters || typeof filters !== "object") {
         return query;
       }
@@ -55,12 +46,16 @@ class DatabaseUtils {
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
           if (!isNaN(startDate.getTime())) {
+            // Set to beginning of the day (00:00:00.000)
+            startDate.setHours(0, 0, 0, 0);
             query.createdAt.$gte = startDate;
           }
         }
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
           if (!isNaN(endDate.getTime())) {
+            // Set to end of the day (23:59:59.999)
+            endDate.setHours(23, 59, 59, 999);
             query.createdAt.$lte = endDate;
           }
         }
@@ -72,11 +67,7 @@ class DatabaseUtils {
       return {};
     }
   }
-  /**
-   * Build MongoDB projection from selected columns
-   * @param {String|Array} columns - Column names to select (string or array)
-   * @returns {Object} - MongoDB projection object
-   */
+
   static buildProjection(columns) {
     try {
       if (!columns) {
@@ -86,7 +77,6 @@ class DatabaseUtils {
       const projection = {};
       let columnList = [];
 
-      // Handle both string and array input
       if (typeof columns === "string") {
         columnList = columns.split(",").map((col) => col.trim());
       } else if (Array.isArray(columns)) {
@@ -110,12 +100,6 @@ class DatabaseUtils {
     }
   }
 
-  /**
-   * Build sort options
-   * @param {String} sortBy - Field to sort by
-   * @param {String} sortOrder - (asc/desc)
-   * @returns {Object} - Sort options
-   */
   static buildSort(sortBy = "createdAt", sortOrder = "desc") {
     try {
       const sort = {};

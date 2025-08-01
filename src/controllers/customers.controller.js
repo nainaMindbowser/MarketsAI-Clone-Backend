@@ -22,6 +22,9 @@ const getCustomers = catchAsync(async (req, res) => {
     endDate,
     sortBy,
     sortOrder,
+    limit,
+    lastId,
+    page,
   } = req.query;
 
   const filters = {
@@ -34,9 +37,11 @@ const getCustomers = catchAsync(async (req, res) => {
     endDate,
     sortBy,
     sortOrder,
+    limit: parseInt(limit) || 20,
+    lastId,
+    page: parseInt(page) || 1,
   };
 
-  // Remove undefined values
   Object.keys(filters).forEach((key) => {
     if (filters[key] === undefined) {
       delete filters[key];
@@ -49,11 +54,75 @@ const getCustomers = catchAsync(async (req, res) => {
     success: true,
     message: CUSTOMERS_CONSTANTS.SUCCESS.CUSTOMERS_FETCHED,
     data: result.data,
-    total: result.total,
+    pagination: {
+      total: result.total,
+      hasMore: result.hasMore,
+      lastId: result.lastId,
+      currentPage: filters.page || 1,
+      limit: filters.limit,
+      totalPages: Math.ceil(result.total / filters.limit),
+    },
     filters,
+  });
+});
+
+const getCustomersForInfiniteScroll = catchAsync(async (req, res) => {
+  const validation = ValidationUtils.validateFilterParams(req.query);
+  if (!validation.isValid) {
+    return res.status(400).json({
+      success: false,
+      message: CUSTOMERS_CONSTANTS.ERRORS.INVALID_FILTERS,
+      errors: validation.errors,
+    });
+  }
+
+  const {
+    columns,
+    subscriptionType,
+    deviceType,
+    search,
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder,
+    limit,
+    lastId,
+  } = req.query;
+
+  const filters = {
+    columns: columns,
+    subscriptionType:
+      ValidationUtils.normalizeSubscriptionType(subscriptionType),
+    deviceType: ValidationUtils.normalizeDeviceType(deviceType),
+    search: ValidationUtils.sanitizeString(search),
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder,
+    limit: parseInt(limit) || 15,
+    lastId,
+  };
+
+  Object.keys(filters).forEach((key) => {
+    if (filters[key] === undefined) {
+      delete filters[key];
+    }
+  });
+
+  const result = await customersService.getCustomersForInfiniteScroll(filters);
+
+  return res.status(200).json({
+    success: true,
+    message: CUSTOMERS_CONSTANTS.SUCCESS.CUSTOMERS_FETCHED,
+    data: result.data,
+    hasMore: result.hasMore,
+    lastId: result.lastId,
+    totalCount: result.total,
+    currentBatchSize: result.data.length,
   });
 });
 
 module.exports = {
   getCustomers,
+  getCustomersForInfiniteScroll,
 };

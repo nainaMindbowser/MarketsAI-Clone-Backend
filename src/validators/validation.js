@@ -2,7 +2,12 @@ const {
   SUBSCRIPTION_TYPES,
   DEVICE_TYPES,
 } = require("../constants/customers.constants");
-const { MESSAGES, REGEX } = require("../constants/validation.constants");
+const {
+  MESSAGES,
+  REGEX,
+  VALIDATION_ERROR_CODES,
+} = require("../constants/validation.constants");
+const CommonValidator = require("../utils/commonValidator");
 
 //  validation utility functions for customers
 
@@ -16,7 +21,11 @@ class ValidationUtils {
         .replace("-", "-");
       const validSubscriptionTypes = Object.values(SUBSCRIPTION_TYPES);
       if (!validSubscriptionTypes.includes(normalizedSubscriptionType)) {
-        errors.push(MESSAGES.INVALID_SUBSCRIPTION_TYPE);
+        errors.push({
+          field: "subscriptionType",
+          message: MESSAGES.INVALID_SUBSCRIPTION_TYPE,
+          code: VALIDATION_ERROR_CODES.INVALID_VALUE,
+        });
       }
     }
 
@@ -24,16 +33,28 @@ class ValidationUtils {
       const normalizedDeviceType = query.deviceType.toUpperCase();
       const validDeviceTypes = Object.values(DEVICE_TYPES);
       if (!validDeviceTypes.includes(normalizedDeviceType)) {
-        errors.push(MESSAGES.INVALID_DEVICE_TYPE);
+        errors.push({
+          field: "deviceType",
+          message: MESSAGES.INVALID_DEVICE_TYPE,
+          code: VALIDATION_ERROR_CODES.INVALID_VALUE,
+        });
       }
     }
 
     if (query.startDate && isNaN(Date.parse(query.startDate))) {
-      errors.push(MESSAGES.INVALID_START_DATE);
+      errors.push({
+        field: "startDate",
+        message: MESSAGES.INVALID_START_DATE,
+        code: VALIDATION_ERROR_CODES.INVALID_FORMAT,
+      });
     }
 
     if (query.endDate && isNaN(Date.parse(query.endDate))) {
-      errors.push(MESSAGES.INVALID_END_DATE);
+      errors.push({
+        field: "endDate",
+        message: MESSAGES.INVALID_END_DATE,
+        code: VALIDATION_ERROR_CODES.INVALID_FORMAT,
+      });
     }
 
     return {
